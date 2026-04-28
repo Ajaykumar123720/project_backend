@@ -9,10 +9,15 @@ Option A — Render (recommended)
 - Deploy. Render will run `npm install` and start the app; root and `/api/*` will be available.
 
 Option B — Vercel (serverless)
-- Vercel is optimized for static sites and serverless functions. To run this Express app on Vercel you must either:
-  1. Convert Express routes into Vercel Serverless Functions under the `api/` folder, or
-  2. Containerize the app (use Vercel's Docker support) — not recommended.
-- If you keep using Vercel, add a simple GET `/` route (already added) and ensure Vercel's build runs `npm install` and `npm start` via a custom server configuration. Note: long-running servers may be incompatible with Vercel's serverless model.
+- This repository now includes a serverless wrapper so the Express app can run on Vercel as Serverless Functions:
+  - `serverless-http` is added to `package.json`.
+  - `api/index.js` wraps the Express app and exposes it as serverless functions.
+
+Notes for Vercel deployment:
+- Connect the `project_backend` GitHub repo to Vercel and deploy the project.
+- In Vercel Project Settings → Environment Variables, add `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`.
+- Vercel serverless functions have execution time limits — avoid long-running DB operations in a single request.
+- After deployment, verify by visiting `/api/status`. The root `/` will return a JSON message.
 
 Quick check
 - After deployment, visit `/api/status` to verify the app is running.
