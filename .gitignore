@@ -1,0 +1,19 @@
+node_modules/
+.env
+.DS_Store
+
+# Java / Maven
+target/
+*.jar
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Logs
+logs/
+*.log
+
+# Misc
+coverage/
