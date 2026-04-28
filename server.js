@@ -237,6 +237,11 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
 });
 
+// Alias for health checks expected by some clients
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Backend is running' });
+});
+
 // Root route - helpful for simple GET / checks (Vercel or browser)
 app.get('/', (req, res) => {
   res.json({ message: 'Backend running. See /api/status or API endpoints under /api/*' });
