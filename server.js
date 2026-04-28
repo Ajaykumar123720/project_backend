@@ -19,33 +19,45 @@ app.use((req, res, next) => {
   next();
 });
 
-// MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// MySQL connection pool (optional)
+let pool = null;
+if (process.env.DB_HOST) {
+  pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  });
 
-// Helper to check connection
-async function checkConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log('Connected to MySQL database');
-    connection.release();
-  } catch (err) {
-    if (err.code === 'ER_BAD_DB_ERROR') {
-      console.log('Database does not exist. Please run /api/init-db to create it.');
-    } else {
-      console.error('MySQL Connection Error:', err);
+  // Helper to check connection
+  async function checkConnection() {
+    try {
+      const connection = await pool.getConnection();
+      console.log('Connected to MySQL database');
+      connection.release();
+    } catch (err) {
+      if (err && err.code === 'ER_BAD_DB_ERROR') {
+        console.log('Database does not exist. Please run /api/init-db to create it.');
+      } else {
+        console.error('MySQL Connection Error:', err);
+      }
     }
   }
+
+  checkConnection();
+} else {
+  console.log('DB_HOST not set — running in mock mode (no database).');
 }
 
-checkConnection();
+// Mock data used when no DB is configured
+const MOCK_FUNDS = [
+  { id: '1', name: 'BlueChip Growth Fund', category: 'Equity', nav: 58.34 },
+  { id: '2', name: 'Stable Income Fund', category: 'Debt', nav: 25.12 }
+];
+
 
 // Initial database setup and seeding
 app.get('/api/init-db', async (req, res) => {
@@ -173,6 +185,10 @@ app.post('/api/login', async (req, res) => {
 // API Routes
 app.get('/api/funds', async (req, res) => {
   try {
+    if (!pool) {
+      // Return mock funds when DB not configured
+      return res.json(MOCK_FUNDS);
+    }
     const [rows] = await pool.query('SELECT * FROM funds');
     const mapped = rows.map(f => ({
       id: f.id,
@@ -203,6 +219,11 @@ app.get('/api/funds', async (req, res) => {
 
 app.get('/api/funds/:id', async (req, res) => {
   try {
+    if (!pool) {
+      const f = MOCK_FUNDS.find(m => m.id === req.params.id);
+      if (!f) return res.status(404).json({ error: 'Fund not found' });
+      return res.json(f);
+    }
     const [rows] = await pool.query('SELECT * FROM funds WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Fund not found' });
     const f = rows[0];

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: project-backend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    repo: "https://github.com/Ajaykumar123720/project_backend.git"
+    branch: master
+    envVars:
+      - key: DB_HOST
+        scope: shared
+      - key: DB_USER
+        scope: shared
+      - key: DB_PASS
+        scope: shared
+      - key: DB_NAME
+        scope: shared
